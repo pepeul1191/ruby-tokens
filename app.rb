@@ -19,18 +19,28 @@ get '/' do
 end
 
 get '/generar' do
-	  rpta = ''
-     usuario = params[:usuario]
+	headers 'Access-Control-Allow-Origin' => '*'
+	headers 'Access-Control-Allow-Headers' => 'Authorization,Accepts,Content-Type,X-CSRF-Token,X-Requested-With'
+	headers 'Access-Control-Allow-Methods' => 'GET'
+
+	rpta = ''
+	usuario = params[:usuario]
 
      begin
-         	o = [('a'..'z'), ('A'..'Z')].map(&:to_a).flatten
-			string = (0...25).map { o[rand(o.length)] }.join
-			token = AesEncryptDecrypt.encryption(string)
-			doc = {'usuario' => usuario, 'token' => token}
+     		db = Database.new
+			rs = db.connection().find({'usuario' => usuario})
 
-			db = Database.new
-			db.connection().insert(doc)
-			rpta = { :tipo_mensaje => 'success', :mensaje => ['token', token] }.to_json
+			if rs.length == 1
+				doc = rs[0]
+				rpta = { :tipo_mensaje => 'success', :mensaje => [doc['token']] }.to_json
+			else
+				o = [('a'..'z'), ('A'..'Z')].map(&:to_a).flatten
+				string = (0...25).map { o[rand(o.length)] }.join
+				token = AesEncryptDecrypt.encryption(string)
+				doc = {'usuario' => usuario, 'token' => token}
+				db.connection().insert(doc)
+				rpta = { :tipo_mensaje => 'success', :mensaje => ['token', token] }.to_json
+			end
      rescue StandardError => e #ZeroDivisionError
          	rpta = { :tipo_mensaje => 'error', :mensaje => ['Se ha producido un error al generar el token al usuario', e] }.to_json
      end
@@ -39,6 +49,10 @@ get '/generar' do
 end
 
 get '/get_token' do
+	headers 'Access-Control-Allow-Origin' => '*'
+	headers 'Access-Control-Allow-Headers' => 'Authorization,Accepts,Content-Type,X-CSRF-Token,X-Requested-With'
+	headers 'Access-Control-Allow-Methods' => 'GET'
+
 	rpta = ''
    usuario = params[:usuario]
 
@@ -60,6 +74,10 @@ get '/get_token' do
 end
 
 get '/borrar' do
+	headers 'Access-Control-Allow-Origin' => '*'
+	headers 'Access-Control-Allow-Headers' => 'Authorization,Accepts,Content-Type,X-CSRF-Token,X-Requested-With'
+	headers 'Access-Control-Allow-Methods' => 'GET'
+	
 	rpta = ''
 	usuario = params[:usuario]
 
